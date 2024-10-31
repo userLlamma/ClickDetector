@@ -40,7 +40,6 @@ notebooks/.ipynb_checkpoints/
 # Project specific
 data/*
 !data/.gitkeep
-weights/*
 !weights/.gitkeep
 logs/
 *.log
