@@ -1,0 +1,84 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+ENV/
+.env
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Jupyter Notebook
+.ipynb_checkpoints
+notebooks/.ipynb_checkpoints/
+
+# Project specific
+data/*
+!data/.gitkeep
+weights/*
+!weights/.gitkeep
+logs/
+*.log
+*.pkl
+*.h5
+*.pth
+*.onnx
+*.tflite
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+coverage.xml
+*.cover
+
+# Misc
+.mypy_cache/
+.pyre/
+.pytype/
+
+# Distribution
+*.tar.gz
+*.zip
+
+# Documentation
+docs/_build/
+site/
+
+# Local development settings
+local_settings.py
+
+# audio data
+*.wav
+*.pcm
+
+# Model cache
+model_cache/
+tools/model_cache/
+**/model_cache/

@@ -1,0 +1,53 @@
+model:
+  name: "ClickClassifier"
+  path: "weights/model_cpu.pt"         
+  input_shape: [1, 1, 128, 100]        # [batch, channel, n_mels, target_length]
+  output_shape: [1, 2]                 # [batch, num_classes] - 二分类
+  num_threads: 4                      
+  device: "cpu"                        
+  threshold: 0.5                       # 分类阈值
+
+preprocess:
+  sample_rate: 48000                   
+  n_mels: 128                         
+  target_length: 100                   
+  normalize: true                      
+
+postprocess:
+  label_map: {                         # 标签映射
+    0: "non_click",
+    1: "click"
+  }
+  output_type: "full"                  # "full" 表示输出分类结果和置信度
+
+server:
+  host: "0.0.0.0"                     
+  port: 8000                          
+  workers: 4                          
+  timeout: 30          
+
+# inference_config.yaml
+api:
+  admin_token: "whoisthekeeperofthe"        #"${ADMIN_TOKEN}"
+  tokens:
+    - token: "xdkjjn13839@dfjd12JK0"  #"${DEFAULT_API_TOKEN}"
+      description: "Default API Token"
+      expires_at: "2024-12-31T23:59:59Z"
+    
+    - token: "2834u31hfpakjfkodjfa0O22df@fehj"  #"${PERMANENT_TOKEN}"
+      description: "Permanent Token"
+    
+    # 可以直接在配置文件中添加更多token
+    - token: "car-batteryplug-click-wav-classifier"
+      description: "Test Token"
+      expires_at: "2024-12-31T23:59:59Z"
+
+  # 其他API配置...
+  cors_origins:
+    - "*"
+  rate_limit:
+    requests_per_minute: 60          
+
+logging:
+  level: "INFO"
+  save_path: "logs/inference.log"

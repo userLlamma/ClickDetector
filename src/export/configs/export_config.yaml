@@ -1,0 +1,40 @@
+# 模型配置
+model:
+  name: "ClickClassifier"
+  input_shape: [1, 1, 128, 100]  # [1, n_mels, target_length], n_mels需要查看 src\models\config.py， 100是固定的目标文件长度
+  output_shape: [1, 1000]
+
+# 路径配置
+paths:
+  checkpoint_path: "models/checkpoints/best_model.pt"
+  output_path: "weights/model_cpu.pt"
+
+# 导出配置
+export:
+  format: "torchscript"  # 可选: "torchscript" 或 "onnx"
+  trace_method: "trace"  # 可选: "trace" 或 "script"
+  opset_version: 11     # ONNX的opset版本
+  dynamic_axes:         # ONNX的动态维度配置
+    input:
+      0: "batch_size"
+    output:
+      0: "batch_size"
+
+# 优化配置
+optimization:
+  enabled: true
+  level: 3  # 优化级别
+  features:
+    constant_folding: true
+    operator_fusion: true
+
+# 验证配置
+validation:
+  enabled: true
+  rtol: 1e-3  # 相对容差
+  atol: 1e-5  # 绝对容差
+
+# 日志配置
+logging:
+  level: "INFO"
+  save_path: "logs/export.log"
