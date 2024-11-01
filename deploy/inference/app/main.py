@@ -1,6 +1,6 @@
-# deploy/inference/app/main.py
 from fastapi import FastAPI, Depends, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 from typing import Optional
 from datetime import datetime, timedelta
 import pytz
@@ -8,11 +8,22 @@ import pytz
 from .dependencies import predictor, config
 from .routers import predict
 from .token_manager import TokenManager
+from .templates import DEMO_HTML
+
+import logging
+
+# 配置日志
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+logger = logging.getLogger(__name__)
 
 # 创建FastAPI应用
 app = FastAPI(
-    title="Click Classification API",
-    description="API for click sound classification",
+    title="Click Sound Detection API",
+    description="API for detecting clicks in audio files",
     version="1.0.0"
 )
 
@@ -23,6 +34,7 @@ token_manager = TokenManager()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -47,6 +59,11 @@ app.include_router(
     predict.router,
     dependencies=[Depends(verify_token)]  # 为所有预测接口添加token验证
 )
+
+@app.get("/", response_class=HTMLResponse)
+async def get_demo_page():
+    """返回演示页面"""
+    return HTMLResponse(content=DEMO_HTML)
 
 # Token管理接口
 @app.post("/admin/tokens", tags=["admin"])
@@ -121,6 +138,7 @@ async def extend_token(
 @app.on_event("startup")
 async def startup_event():
     """启动时预热模型"""
+    logger.info("Starting model warmup...")
     predictor.warmup()
 
 @app.get("/health")
@@ -128,7 +146,6 @@ async def health_check():
     """健康检查接口"""
     return {"status": "healthy"}
 
-# Token验证接口
 @app.get("/verify-token")
 async def verify_token_endpoint(token: str = Depends(verify_token)):
     """验证token有效性"""
@@ -140,3 +157,7 @@ async def verify_token_endpoint(token: str = Depends(verify_token)):
             "description": token_info.description
         }
     return {"valid": False}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8018)

@@ -30,7 +30,7 @@ class TokenManager:
             config_path: 配置文件路径，如果为None则使用默认路径
         """
         self.tokens: Dict[str, TokenInfo] = {}
-        self.config_path = config_path or str(Path(__file__).parent.parent / "config" / "inference_config.yaml")
+        self.config_path = config_path or str(Path(__file__).parent.parent / "configs" / "inference_config.yaml")
         self._load_config()
 
     def _load_config(self) -> None:
