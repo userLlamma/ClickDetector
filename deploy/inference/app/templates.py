@@ -121,7 +121,6 @@ DEMO_HTML = """
                     const result = data.result.prediction;
                     const message = `
                         Result: ${result.class_name}<br>
-                        Confidence: ${(result.score * 100).toFixed(2)}%<br>
                         Probabilities:<br>
                         - No Click: ${(result.probabilities['non_click'] * 100).toFixed(2)}%<br>
                         - Click: ${(result.probabilities['click'] * 100).toFixed(2)}%

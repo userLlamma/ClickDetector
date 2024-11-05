@@ -108,7 +108,6 @@ class ClickPredictor:
                 "prediction": {
                     "class_id": predicted_class,
                     "class_name": self.label_map[predicted_class],
-                    "score": click_prob,
                     "probabilities": {
                         self.label_map[0]: probs[0, 0].item(),
                         self.label_map[1]: click_prob

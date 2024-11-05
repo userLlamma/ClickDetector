@@ -1,5 +1,5 @@
 version: 1
-disable_existing_loggers: false
+disable_existing_loggers: false  # 这个保留
 
 formatters:
   standard:
@@ -16,11 +16,14 @@ loggers:
   uvicorn:
     handlers: [default]
     level: INFO
+    propagate: false  # 必须添加这个来解决重复
   uvicorn.error:
     level: INFO
+    propagate: false  # 必须添加这个来解决重复
   uvicorn.access:
     handlers: [default]
     level: INFO
+    propagate: false  # 必须添加这个来解决重复
 
 root:
   handlers: [default]

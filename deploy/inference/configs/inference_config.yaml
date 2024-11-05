@@ -46,7 +46,7 @@ api:
   cors_origins:
     - "*"
   rate_limit:
-    requests_per_minute: 60          
+    requests_per_minute: 120          
 
 logging:
   level: "INFO"
