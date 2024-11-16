@@ -48,6 +48,7 @@ logs/
 *.pth
 *.onnx
 *.tflite
+submissions/
 
 # Testing
 .coverage

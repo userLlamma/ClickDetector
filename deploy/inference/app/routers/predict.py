@@ -12,19 +12,25 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 def get_client_ip(request: Request) -> str:
-    """获取客户端真实IP"""
-    ip_headers = [
-        'CF-Connecting-IP',
-        'X-Forwarded-For',
-        'X-Real-IP',
-    ]
+    """
+    获取客户端真实IP
+    兼容:
+    1. CDN场景 (CloudFront/其他CDN)
+    2. 直接访问场景
+    3. 反向代理场景
+    """
+    # 1. 检查X-Forwarded-For
+    if 'X-Forwarded-For' in request.headers:
+        ips = [ip.strip() for ip in request.headers['X-Forwarded-For'].split(',')]
+        if ips:
+            return ips[0]  # 永远取最左侧IP (客户端IP)
     
-    for header in ip_headers:
+    # 2. 检查其他可能的头部
+    for header in ['X-Real-IP', 'CF-Connecting-IP']:
         if header in request.headers:
-            if header == 'X-Forwarded-For':
-                return request.headers[header].split(',')[0].strip()
-            return request.headers[header]
-            
+            return request.headers[header].strip()
+    
+    # 3. 降级到直接连接的IP
     return request.client.host
 
 # 定义常量
@@ -45,20 +51,26 @@ async def validate_file(file: UploadFile):
             detail=f"File type {file.content_type} not allowed. Allowed types: {ALLOWED_AUDIO_TYPES}"
         )
     
-    # 获取文件大小（不读取文件内容）
-    file_size = 0
-    async for chunk in file.file:
-        file_size += len(chunk)
-        if file_size > MAX_FILE_SIZE:
-            await file.file.seek(0)  # 重置文件指针
-            raise HTTPException(
-                status_code=400,
-                detail=f"File size exceeds maximum limit of {MAX_FILE_SIZE/1024/1024}MB"
-            )
+    # 使用异步读取文件内容
+    file_content = await file.read()  # 异步读取文件内容
+    file_size = len(file_content)
     
-    await file.file.seek(0)  # 重置文件指针以供后续读取
+    # 检查文件大小
+    if file_size > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=400,
+            detail=f"File size exceeds maximum limit of {MAX_FILE_SIZE/1024/1024}MB"
+        )
     
+    # 重置文件指针以供后续读取
+    file.file.seek(0)
+
     logger.info(f"File validation passed: {file.filename}, size: {file_size}, type: {file.content_type}")
+
+    # 返回文件大小
+    return file_size
+    
+    
 
 
 class StepTimer:
@@ -81,7 +93,6 @@ class StepTimer:
         return (time.time() - self.start_time) * 1000
 
     def get_report(self):
-        # API返回只包含计算时间所需的timing信息
         return {
             "timing": {
                 "server_receive_time": self.timing["server_receive_time"],
@@ -91,18 +102,29 @@ class StepTimer:
         }
 
     def get_detailed_metrics(self):
-        # 计算真实的文件上传时间
         detailed_steps = self.steps.copy()
+        
         if 'client_start_time' in self.timing:
+            # 直接使用服务器接收时间减去客户端开始时间
             upload_time = self.timing['server_receive_time'] - self.timing['client_start_time']
-            detailed_steps['network_upload'] = upload_time  # 真实的网络传输时间
+            
+            if upload_time < 0:
+                logger.warning(f"Negative upload time detected: {upload_time}ms")
+                upload_time = 0
+                
+            detailed_steps['network_upload'] = upload_time
+        
+        backend_time = self.total()
+        total_with_upload = backend_time
+        if 'network_upload' in detailed_steps:
+            total_with_upload = detailed_steps['network_upload'] + backend_time
 
-        # 返回详细的性能指标，用于日志记录
         return {
-            "total_ms": f"{self.total():.2f}",
-            "total_with_upload": f"{(upload_time + self.total()):.2f}" if 'client_start_time' in self.timing else "unknown",
+            "total_ms": f"{backend_time:.2f}",
+            "total_with_upload": f"{total_with_upload:.2f}",
             "steps": {k: f"{v:.2f}ms" for k, v in detailed_steps.items()}
         }
+
 
 @router.post("/predict")
 async def predict(
@@ -124,7 +146,7 @@ async def predict(
             timer.timing["client_start_time"] = int(client_start_time)
         
         # 文件验证
-        validate_file(file)
+        await validate_file(file)
         timer.step("file_validation")
         
         # 读取音频文件
@@ -170,7 +192,7 @@ async def predict(
         
         logger.info(log_message)
         
-        # API只返回简化的timing信息
+        # 返回结果
         return JSONResponse({
             "status": "success",
             "result": result,

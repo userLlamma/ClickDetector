@@ -4,11 +4,18 @@ from fastapi.responses import HTMLResponse
 from typing import Optional
 from datetime import datetime, timedelta
 import pytz
+import time
+from pydantic import BaseModel
+import json
+import os
 
 from .dependencies import predictor, config
 from .routers import predict
 from .token_manager import TokenManager
 from .templates import DEMO_HTML
+
+from .middleware import client_ip_middleware  # 引入记录IP的中间件
+from ..utils.logging import request_ip  # 引入 request_ip 工具类，用于日志中记录
 
 import logging
 
@@ -39,6 +46,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# 添加记录IP的中间件
+app.middleware("http")(client_ip_middleware)
+
+
+class ContactForm(BaseModel):
+    name: str
+    email: str
+    message: str
+
+# 确保数据目录存在
+DATA_DIR = "submissions"
+if not os.path.exists(DATA_DIR):
+    os.makedirs(DATA_DIR)
+
 async def verify_token(x_api_token: Optional[str] = Header(None)):
     """Token验证依赖"""
     if x_api_token is None:
@@ -64,6 +85,32 @@ app.include_router(
 async def get_demo_page():
     """返回演示页面"""
     return HTMLResponse(content=DEMO_HTML)
+
+@app.get("/time")
+async def get_server_time():
+    return {"server_time": int(time.time() * 1000)}  # 返回当前服务器时间，单位毫秒
+
+
+@app.post("/contact")
+async def submit_form(form_data: ContactForm):
+    try:
+        submission = {
+            "timestamp": datetime.now().isoformat(),
+            **form_data.dict()
+        }
+        
+        filename = f"submission_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        filepath = os.path.join(DATA_DIR, filename)
+        
+        with open(filepath, 'w', encoding='utf-8') as f:
+            json.dump(submission, f, ensure_ascii=False, indent=2)
+        
+        return {
+            "message": "Form submitted successfully!",
+            "submission_id": filename
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 # Token管理接口
 @app.post("/admin/tokens", tags=["admin"])
