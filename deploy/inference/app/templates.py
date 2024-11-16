@@ -227,6 +227,55 @@ DEMO_HTML = """
                 margin: 60px 20px;
             }
         }
+
+        .section h2 {
+            font-size: 1.75rem;
+            margin-bottom: 1.5rem;
+            color: #333;
+        }
+
+        .section h3 {
+            font-size: 1.25rem;
+            margin: 1.5rem 0 1rem;
+            color: #444;
+        }
+
+        .section p {
+            margin-bottom: 1rem;
+        }
+
+        .section ul, 
+        .section ol {
+            margin-bottom: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .section li {
+            margin-bottom: 0.5rem;
+        }
+
+        .section strong {
+            color: #333;
+        }
+
+        .section em {
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .section h2 {
+                font-size: 1.5rem;
+            }
+            
+            .section h3 {
+                font-size: 1.1rem;
+            }
+            
+            .section {
+                margin-bottom: 20px;
+                padding: 20px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -264,7 +313,33 @@ DEMO_HTML = """
         <!-- About Section -->
         <section id="about" class="section">
             <h2>About the Demo</h2>
-            <p>This demo demonstrates our click sound detection technology using machine learning...</p>
+            <p>This demo showcases our AI-powered click sound detection system, designed to identify and analyze click sounds in audio recordings. Our machine learning model has been trained to recognize specific click patterns and characteristics.</p>
+            
+            <h3>Technical Requirements</h3>
+            <ul>
+                <li><strong>File Format:</strong> WAV format only</li>
+                <li><strong>Audio Channel:</strong> Mono (single channel)</li>
+                <li><strong>Duration:</strong> Maximum 3 seconds recommended</li>
+                <li><strong>Sampling Rate:</strong> Up to 48kHz</li>
+                <li><strong>File Size:</strong> Maximum 10MB</li>
+            </ul>
+
+            <h3>Current Limitations</h3>
+            <ul>
+                <li>The model is trained on a specific subset of click sounds and may not recognize all types of clicks</li>
+                <li>Performance may vary depending on background noise and audio quality</li>
+                <li>Best results are achieved with clear, isolated click sounds</li>
+            </ul>
+
+            <h3>How to Use</h3>
+            <ol>
+                <li>Enter your API token</li>
+                <li>Upload a WAV file meeting the above specifications</li>
+                <li>Click "Detect Click" to analyze</li>
+                <li>View results showing click probability and detection metrics</li>
+            </ol>
+
+            <p><em>Note: This is a demonstration version. For commercial use or access to the full model capabilities, please contact us.</em></p>
         </section>
     </div>
 
